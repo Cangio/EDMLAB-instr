@@ -267,6 +267,14 @@ classdef scope_Tek_MSO56_class<handle
 			obj.rawWrite(strcat("HOR:MODE:SCA ", num2str(obj.timeDiv)));
 		end
 
+		function horizAuto(obj)
+			obj.rawWrite("HOR:MODE AUTO");
+		end
+
+		function res = chClipping(obj, chan)
+			res = obj.rawWR(strcat("CH", num2str(chan), ":CLIPping?"));
+		end
+
 		% Set time division from frequency
 		function setTimeFromFreq(obj, freq)
 			time = (1 / freq) * 20;
