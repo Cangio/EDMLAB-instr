@@ -95,9 +95,10 @@ classdef scope_Tek_MSO56_class<handle
 			% INPUT: string -> command to be sent
 			% OUTPUT: string -> response from instrument
 
-			writeline(obj.visaObj, comm);
-			pause(0.1);
-			data = readline(obj.visaObj);
+			%writeline(obj.visaObj, comm);
+			%pause(0.1);
+			%data = readline(obj.visaObj);
+			data = writeread(obj.visaObj, comm);
 		end
 		function data = WR(obj, comm)
 			% Interface for visadev writeline function
