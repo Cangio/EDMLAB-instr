@@ -1,14 +1,14 @@
-classdef psu_Rig_DP831_class<handle
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Class for Rigol DP831 Programmable DC power supply
-%
-%%% Methods:
-%		- init(resource)				// Open device connection
-%		- reset()						// Reset to default
-%		- rawWrite(comm)				// Write given command on SCPI
-%		- data = rawWR(comm)
+classdef psu_BK_9132B_class<handle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Class for BK Precision 9132B Programmable DC power supply 				%
+% 																			%
+%%% Methods: 																%
+%		- init(resource)				// Open device connection 			%
+%		- reset()						// Reset to default 				%
+%		- rawWrite(comm)				// Write given command on SCPI 		%
+%		- data = rawWR(comm) 												%
 %		- 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 	properties
 		visaObj
@@ -24,7 +24,6 @@ classdef psu_Rig_DP831_class<handle
 				error("Problem in connecting to visa instrument");
 			end
 
-			%obj.visaObj.Terminator
 			idn = writeread(obj.visaObj, "*IDN?");
 			disp(strcat("Connected with: ", idn));
 
@@ -84,9 +83,10 @@ classdef psu_Rig_DP831_class<handle
 			end
 
 			if chan == 0
-				obj.rawWrite(strcat(":SOUR:VOLT ", num2str(voltage)));
+				obj.rawWrite(strcat("VOLT ", num2str(voltage)));
 			else
-				obj.rawWrite(strcat(":SOUR", num2str(chan), ":VOLT ", num2str(voltage)));
+				obj.rawWrite(strcat("INST CH", num2str(chan)));
+				obj.rawWrite(strcat("VOLT ", num2str(voltage)));
 			end
 		end
 
@@ -105,9 +105,10 @@ classdef psu_Rig_DP831_class<handle
 			end
 
 			if chan == 0
-				obj.rawWrite(strcat(":SOUR:CURR ", num2str(current)));
+				obj.rawWrite(strcat("CURR ", num2str(current)));
 			else
-				obj.rawWrite(strcat(":SOUR", num2str(chan), ":CURR ", num2str(current)));
+				obj.rawWrite(strcat("INST CH", num2str(chan)));
+				obj.rawWrite(strcat("CURR ", num2str(current)));
 			end
 		end
 
@@ -150,31 +151,52 @@ classdef psu_Rig_DP831_class<handle
 
 			% If state is "ON" or "OFF" convert to integer
 			if isa(state, 'string') || isa(state, 'char')
-				if ~ismember(state, ["ON" "OFF"])
+				if ismember(state, ["ON" "OFF"])
+					if state == "ON"
+						state = 1;
+					else
+						state = 0;
+					end
+				else
 					error("Wrong command in setOnOff()");
 				end
 			end
 
-			if isa(state, 'integer')
-				if state == 1
-					state = "ON";
+			if state == 1
+				if chan ~= 0
+					if ismember(obj.lastchan, [2 3])
+						obj.rawWrite(":OUTP CH3,ON");
+						obj.rawWrite(":OUTP CH2,ON");
+					else
+						obj.rawWrite(strcat(":OUTP CH", num2str(chan), ",ON"));
+					end
+					obj.lastchan = chan;
 				else
-					state = "OFF";
+					if ismember(obj.lastchan, [2 3])
+						obj.rawWrite(":OUTP CH2,ON");
+						obj.rawWrite(":OUTP CH3,ON");
+					else
+						obj.rawWrite(":OUTP ON");
+					end
 				end
-			end
-
-			if chan ~= 0
-				obj.rawWrite(strcat(":OUTP CH", num2str(chan), ",", state));
-				obj.lastchan = chan;
 			else
-				if ismember(chan, [2 3]) && obj.trackopt == 1
-					obj.rawWrite(strcat(":OUTP CH2,", state));
-					obj.rawWrite(strcat(":OUTP CH3,", state));
+				if chan ~= 0
+					if ismember(obj.lastchan, [2 3])
+						obj.rawWrite(":OUTP CH3,OFF");
+						obj.rawWrite(":OUTP CH2,OFF");
+					else
+						obj.rawWrite(strcat(":OUTP CH", num2str(chan), ",OFF"));
+					end
+					obj.lastchan = chan;
 				else
-					obj.rawWrite(strcat(":OUTP ", state));
+					if ismember(obj.lastchan, [2 3])
+						obj.rawWrite(":OUTP CH2,OFF");
+						obj.rawWrite(":OUTP CH3,OFF");
+					else
+						obj.rawWrite(":OUTP OFF");
+					end
 				end
 			end
-
 		end
 
 		function [v, c, p] = measAll(obj, chan)
