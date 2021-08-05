@@ -1,4 +1,4 @@
-classdef awg_Agi_33210A_class<handle
+classdef awg_Agi_81150A_class<handle
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Class for Agilent 33210A Arbitrary Waveform Generator 						%
 %																				%
@@ -84,7 +84,7 @@ classdef awg_Agi_33210A_class<handle
 			obj.rawWrite("OUTPut ON");
 		end
 
-		function setWF(obj, wav)
+		function setWF(obj, chan, wav)
 			% Set AWG output waveform
 			% args:
 			%   wav: string {'SIN'|'SQU'|'PULS'|'RAMP'|'DC'}
@@ -97,10 +97,10 @@ classdef awg_Agi_33210A_class<handle
 			end
 		end
 
-		function setAmplitude(obj, ampl)
+		function setAmpl(obj, chan, ampl)
 			% Set AWG output voltage
 			% args:
-			%   ampl: double
+			%   ampl: integer
 			
 			if isa(ampl, 'integer') || isa(ampl, 'double')
 				ampl = num2str(ampl);
@@ -112,6 +112,44 @@ classdef awg_Agi_33210A_class<handle
 				obj.rawWrite(strcat("VOLT ", ampl));
 			end
 		end
+
+		function setOffs(obj, chan, offs)
+			% Set AWG output voltage
+			% args:
+			%   offs: integer
+			
+			if isa(offs, 'integer') || isa(offs, 'double')
+				offs = num2str(offs);
+			end
+
+			obj.rawWrite(strcat(":VOLT", num2str(chan), ":OFFS ", offs));
+		end
+
+		function setFreq(obj, chan, freq)
+			% Set AWG output frequency
+			% args:
+			%	chan: integer {1|2}
+			%   freq: double
+			
+			if isa(freq, 'integer') || isa(freq, 'double')
+				freq = num2str(freq);
+			end
+
+			obj.rawWrite(strcat(":FREQ", num2str(chan), " ", freq));
+		end
+
+		function setHIB(obj, chan)
+			% Set channel in HI Bandwidth mode (0-240MHz)
+
+			obj.rawWrite(strcat(":OUTP", num2str(chan), ":ROUT HIB"));
+		end
+
+		function setHIV(obj, chan)
+			% Set channel in HI Voltage mode (0-50MHz)
+
+			obj.rawWrite(strcat(":OUTP", num2str(chan), ":ROUT HIV"));
+		end
+
 
 		function setPulse(obj, per, wid, edg)
 			% Set AWG pulse waveform
@@ -148,28 +186,28 @@ classdef awg_Agi_33210A_class<handle
 			obj.rawWrite(strcat("FUNC:PULS:TRAN ", num2str(edg))); % Set edge transition time
 		end
 
-		function setOnOff(obj, state)
+		function setOnOff(obj, chan, state)
 			% Set output on/off
 			% args:
-			%	state: integer {0|1}
-	
-			if isa(state, 'string') || isa(state, 'char')
-				if ~ismember(state, ["ON" "OFF"])
-					disp("Wrong parameter")
-					return
+			%	chan: integer {1|2}
+			%	state: {0|1|'ON'|'OFF'}
+			
+			if isa(state, 'integer') || isa(state, 'double')
+				if state == 1
+					state = 'ON';
 				else
-					if state == "ON"
-						state = 1;
-					else
-						state = 0;
-					end
+					state = 'OFF';
 				end
 			end
-
-			if state == 1
-				writeline(obj.visaObj, "OUTP ON");
+			if ~ismember(state, ['ON' 'OFF'])
+				disp("Wrong parameter")
+				return
 			else
-				writeline(obj.visaObj, "OUTP OFF");
+
+			if chan < 0
+				obj.rawWrite(strcat("OUT", num2str(-chan), ":COMP ", state));
+			else
+				obj.rawWrite(strcat("OUT", num2str(chan), " ", state));
 			end
 		end
 	end

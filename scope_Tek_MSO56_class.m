@@ -30,6 +30,7 @@ classdef scope_Tek_MSO56_class<handle
 		nchans 	% Total number of channels
 		maxSR 	% MAX Sampling Rate
 		srs 	% Possible values for Sampling Rate
+		measures = ['VOLT' 'MEAN' 'PK2PK' 'SKEW' 'PHASE' 'MAXIMUM' 'MINIMUM' 'FREQUENCY']
 	end
 	methods
 		function res = init(obj, resource, folder)
@@ -401,11 +402,47 @@ classdef scope_Tek_MSO56_class<handle
 			end
 		end
 			
-		function meas(obj, num, chan, m_type)
+		function setMeas(obj, num, chan, m_type, cycl, chan2)
+			% Set a measure
+			% args:
+			%	m_type: string {"VOLT" | "MEAN" | "PK2PK"}
 			schan = num2str(chan);
 			snum = num2str(num);
 
-			obj.rawWrite(strcat("MEASU:MEAS", snum,":SOU CH", schan));
+			if ~ismember(m_type, obj.measures)
+				disp("Not a valid mode")
+				return
+			end
+			obj.rawWrite(strcat('MEASU:ADDN "MEAS', snum, '"'));
+			obj.rawWrite(strcat("MEASU:MEAS", snum, ":TYP ", m_type));
+			obj.rawWrite(strcat("MEASU:MEAS", snum, ":SOU CH", schan));
+			if varargin < 5
+				cycl = 0;
+			end
+			if cycl == 0
+				obj.rawWrite(strcat("MEASU:MEAS", snum, ":CYCL RECORD"));
+			else
+				obj.rawWrite(strcat("MEASU:MEAS", snum, ":CYCL CYCLE"));
+			end
+			if varargin > 5
+				obj.rawWrite(strcat("MEASU:MEAS", snum, ":SOU2 CH", num2str(chan2)));
+			end
+		end
+
+		function getMeasMean(obj, num)
+			% Get mean value for specified measure
+			% args:
+			%	num: integer (measure number)
+
+			obj.rawWR(strcat("MEASU:MEAS", num2str(num), ":RESU:CURR:MEAN?"));
+		end
+
+		function getMeasSTDDev(obj, num)
+			% Get standard deviation value for specified measure
+			% args:
+			%	num: integer (measure number)
+
+			obj.rawWR(strcat("MEASU:MEAS", num2str(num), ":RESU:CURR:STDD?"));
 		end
 
 		function [wavef, time] = acqWaveform(obj, chan)
