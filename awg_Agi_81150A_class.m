@@ -88,9 +88,9 @@ classdef awg_Agi_81150A_class<handle
 			% Set AWG output waveform
 			% args:
 			%   wav: string {'SIN'|'SQU'|'PULS'|'RAMP'|'DC'}
-			wav = upper(wav)
+			wav = upper(wav);
 			if ismember(wav, ["SQU" "SIN" "PULS" "RAMP" "DC"])
-				obj.rawWrite(strcat("FUNC ", wav));
+				obj.rawWrite(strcat(":FUNC", num2str(chan)," ", wav));
 				obj.opmode = wav;
 			else
 				disp("Wrong waveform");
@@ -107,9 +107,9 @@ classdef awg_Agi_81150A_class<handle
 			end
 
 			if obj.opmode == "DC"
-				obj.rawWrite(strcat("VOLT:OFFS ", ampl));
+				obj.rawWrite(strcat(":VOLT:OFFS ", ampl));
 			else
-				obj.rawWrite(strcat("VOLT ", ampl));
+				obj.rawWrite(strcat(":VOLT", num2str(chan), ":AMPL ", ampl));
 			end
 		end
 
@@ -174,11 +174,11 @@ classdef awg_Agi_81150A_class<handle
 			% Ensure to satisfy the requirements
 			per_con = wid + 1.6*edg;
 			if per < per_cond
-				per = per_cond
+				per = per_cond;
 			end
 			edg_con = 0.625*wid;
 			if edg > edg_con
-				edg = edg_con
+				edg = edg_con;
 			end
 
 			obj.rawWrite(strcat("FUNC:PULS:PER ", num2str(per))); % Set pulse period
@@ -202,7 +202,7 @@ classdef awg_Agi_81150A_class<handle
 			if ~ismember(state, ['ON' 'OFF'])
 				disp("Wrong parameter")
 				return
-			else
+			end
 
 			if chan < 0
 				obj.rawWrite(strcat("OUT", num2str(-chan), ":COMP ", state));
