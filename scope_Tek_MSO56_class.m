@@ -429,20 +429,20 @@ classdef scope_Tek_MSO56_class<handle
 			end
 		end
 
-		function getMeasMean(obj, num)
+		function mean_m = getMeasMean(obj, num)
 			% Get mean value for specified measure
 			% args:
 			%	num: integer (measure number)
 
-			obj.rawWR(strcat("MEASU:MEAS", num2str(num), ":RESU:CURR:MEAN?"));
+			mean_m = obj.rawWR(strcat("MEASU:MEAS", num2str(num), ":RESU:CURR:MEAN?"));
 		end
 
-		function getMeasSTDDev(obj, num)
+		function stdd = getMeasSTDDev(obj, num)
 			% Get standard deviation value for specified measure
 			% args:
 			%	num: integer (measure number)
 
-			obj.rawWR(strcat("MEASU:MEAS", num2str(num), ":RESU:CURR:STDD?"));
+			stdd = obj.rawWR(strcat("MEASU:MEAS", num2str(num), ":RESU:CURR:STDD?"));
 		end
 
 		function [wavef, time] = acqWaveform(obj, chan)
