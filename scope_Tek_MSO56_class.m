@@ -325,7 +325,7 @@ classdef scope_Tek_MSO56_class<handle
 				sterm = term;
 			end
 
-			obj.rawWrite(strcat("CH", num2str(i), ":TERMINATION ", sterm));
+			obj.rawWrite(strcat("CH", num2str(i), ":TER ", sterm));
 		end
 
 		function runStop(obj, run)

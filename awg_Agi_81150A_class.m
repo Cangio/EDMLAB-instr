@@ -205,9 +205,9 @@ classdef awg_Agi_81150A_class<handle
 			end
 
 			if chan < 0
-				obj.rawWrite(strcat("OUT", num2str(-chan), ":COMP ", state));
+				obj.rawWrite(strcat("OUTP", num2str(-chan), ":COMP ", state));
 			else
-				obj.rawWrite(strcat("OUT", num2str(chan), " ", state));
+				obj.rawWrite(strcat("OUTP", num2str(chan), " ", state));
 			end
 		end
 	end
