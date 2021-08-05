@@ -416,7 +416,7 @@ classdef scope_Tek_MSO56_class<handle
 			obj.rawWrite(strcat('MEASU:ADDN "MEAS', snum, '"'));
 			obj.rawWrite(strcat("MEASU:MEAS", snum, ":TYP ", m_type));
 			obj.rawWrite(strcat("MEASU:MEAS", snum, ":SOU CH", schan));
-			if varargin < 5
+			if nargin < 5
 				cycl = 0;
 			end
 			if cycl == 0
@@ -424,7 +424,7 @@ classdef scope_Tek_MSO56_class<handle
 			else
 				obj.rawWrite(strcat("MEASU:MEAS", snum, ":CYCL CYCLE"));
 			end
-			if varargin > 5
+			if nargin > 5
 				obj.rawWrite(strcat("MEASU:MEAS", snum, ":SOU2 CH", num2str(chan2)));
 			end
 		end
