@@ -491,8 +491,6 @@ classdef scope_Tek_MSO56_class<handle
 			end
 			schan = num2str(chan);
 
-			obj.visaObj.Timeout = 20;
-
 			obj.rawWrite(strcat(":DATA:SOURCE CH", schan));
 
 			obj.rawWrite("DATa:WIDth 2");
@@ -509,13 +507,14 @@ classdef scope_Tek_MSO56_class<handle
 			x_zero = str2double(obj.rawWR(':WFMpre:xzero?'));
 			y_zero = str2double(obj.rawWR(':WFMpre:yzero?'));
 
+			obj.visaObj.Timeout = 30;
 
 			obj.rawWrite(":CURVE?");
 			rawWaveform = readbinblock(obj.visaObj, 'int16');
 			%fscanf(visaScope);
 
 			time = (x_zero:x_incr:x_zero+x_incr*(n_points-1))';
-			wavef = y_zero + rawWaveform.*y_mul;
+			wavef = (y_zero + rawWaveform.*y_mul)';
 			obj.visaObj.Timeout = 2;
 		end
 	end % End methods
