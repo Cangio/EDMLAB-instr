@@ -9,7 +9,10 @@ classdef awg_Agi_81150A_class<handle
 %		- data = rawWR(comm)			// Write command and get output 		%
 %		- outpSine(freq, ampl)			// Output sine with freq and ampl 		%
 %		- setAmplitude(ampl)			// Set AWG output voltage 				%
+%		- setOffs(chan, offs)			// Set AWG output offset 				%
 %		- setWF(wav)					// Set output waveform 					%
+%		- setHIB(chan)					// Set high bandwidth mode 0-240MHz		%
+%		- setHIV(chan)					// Set high voltage mode 0-50MHz		%
 %		- setPulse(per, wid, edg)		// Set pulse waveform 					%
 %		- setOnOff(state)				// Enable or disable output 			%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

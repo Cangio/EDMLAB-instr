@@ -15,6 +15,7 @@ classdef scope_Tek_MSO56_class<handle
 %		- setTimeDiv(time)				// Set time division 					%
 %		- setTimeFromFreq(freq)			// Set time division from freq 			%
 %		- setVertDiv(chan, div)			// Set vertical division 				%
+%		- setChOffs(chan, offs)			// Set offset for given channel			%
 %		- runStop(run)					// Run/stop operation 					%
 %		- setSN(sampling, points)		// Set sampling rate and # points 		%
 %		- setAcq(a_mode, varargin)		// Set acquisition mode 				%
@@ -33,7 +34,7 @@ classdef scope_Tek_MSO56_class<handle
 		measures = ['VOLT' 'MEAN' 'PK2PK' 'SKEW' 'PHASE' 'MAXIMUM' 'MINIMUM' 'FREQUENCY']
 	end
 	methods
-		function res = init(obj, resource, folder)
+		function res = init(obj, resource, varargin)
 			% Init resource
 			try
 				obj.visaObj = visadev(resource);
@@ -46,15 +47,26 @@ classdef scope_Tek_MSO56_class<handle
 
 			obj.timeDiv = 1e-4;
 			obj.nchans = 6;
-			obj.maxSR = 4e9;
+			obj.maxSR = 6.25e9;
 			obj.srs = [10e6 25e6 50e6 100e6 250e6 0.5e9 1e9 2e9 4e9];
 			obj.visaObj.Timeout = 2;
 
-			if nargin < 3
-				folder = "Test";
+			if nargin > 2
+				Options = varargin;
+				if isfield(Options, 'Channels')
+					obj.dispChannels(Options.Channels);
+				end
+				if isfield(Options, 'Impedances')
+					if numel(Options.Channels) ~= numel(Options.Impedances)
+						error("Number of channels and impedances does not match")
+					end
+					for i=1:length(Options.Impedances)
+						obj.chTerm(Options.Channels(i), Options.Impedances(i));
+					end
+				end
 			end
-			obj.sysLoc = strcat("C:\DataDownload\", folder, "\");
-			obj.folder = folder;
+			%obj.sysLoc = strcat("C:\DataDownload\", folder, "\");
+			%obj.folder = folder;
 
 			res = true;
 		end
@@ -109,6 +121,7 @@ classdef scope_Tek_MSO56_class<handle
 				data = writeread(obj.visaObj, comm);
 			catch
 				data = "";
+				data = writeread(obj.visaObj, comm);
 			end
 		end
 
@@ -212,14 +225,21 @@ classdef scope_Tek_MSO56_class<handle
 			end
 
 			% Enable display of only the selected channel
-			for i=1:4
+			for i=1:obj.nchans
 				if chan == i
 					obj.rawWrite(strcat("DIS:GLO:CH", int2str(i),":STATE ON"));
 				else
 					obj.rawWrite(strcat("DIS:GLO:CH", int2str(i),":STATE OFF"));
 				end
 			end
-		end
+        end
+        
+        function getStatus(obj)
+            for ii=1:obj.nchans
+                chstat = scope.rawWR(strcat("DIS:GLO:CH", int2str(ii),":STATE?"));
+                disp(["Channel " int2str(ii) " status" chstat])
+            end
+        end
 
 		function dispChannel(obj, chan, onoff)
 			% Enable/Disable given channel
@@ -244,7 +264,7 @@ classdef scope_Tek_MSO56_class<handle
 			%   chan: array of integers 1-4
 
 			% Enable display of only the selected channel
-			for i=1:4
+			for i=1:obj.nchans
 				if ismember(i, chan)
 					obj.rawWrite(strcat("DIS:GLO:CH", int2str(i),":STATE ON"));
 				else
@@ -349,8 +369,21 @@ classdef scope_Tek_MSO56_class<handle
 			if samp > obj.maxSR
 				samp = obj.maxSR;
 			end
-			writeline(obj.visaObj, strcat("HOR:MODE:SAMPLER ", num2str(samp)));
-			writeline(obj.visaObj, strcat("HOR:MODE:RECO ", num2str(pts)));
+			obj.rawWrite("HOR:MODE MAN");
+			obj.rawWrite(strcat("HOR:MODE:SAMPLER ", num2str(samp)));
+			obj.rawWrite(strcat("HOR:MODE:RECO ", num2str(pts)));
+		end
+
+		function setHorMode(obj, mode)
+			% Set horizontal mode in auto or manual
+			% args:
+			%   mode: string ['AUTO' 'MAN']
+			
+			if mode == "AUTO"
+				obj.rawWrite("HOR:MODE AUTO");
+			else
+				obj.rawWrite("HOR:MODE MAN");
+			end
 		end
 
 		function setAutoSN(obj, pts)
@@ -463,12 +496,12 @@ classdef scope_Tek_MSO56_class<handle
 			obj.rawWrite(strcat(":DATA:SOURCE CH", schan));
 
 			obj.rawWrite("DATa:WIDth 2");
-
 			obj.rawWrite(":DATA:ENCDG SRIBINARY");
-
-			scopeEncodingMethod = obj.rawWR(":DATA:ENCDG?");
-			scopeWaveformPreamble = obj.rawWR(":WFMpre?");
-			scopeNumPoints = obj.rawWR(":WFMpre:NR_Pt?");
+			obj.rawWrite("DATa:STOP 10E+09");
+			pause(0.1);
+			scopeEncodingMethod = obj.WR(":DATA:ENCDG?");
+			scopeWaveformPreamble = obj.WR(":WFMpre?");
+			scopeNumPoints = obj.WR(":WFMpre:NR_Pt?");
 
 			n_points = str2double(scopeNumPoints);
 			x_incr = str2double(obj.rawWR(':WFMpre:XINcr?'));
